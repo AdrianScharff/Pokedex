@@ -1,4 +1,4 @@
-const pokemonsURL = 'https://storage.googleapis.com/campus-cvs/00000000000-images-lectures/pokemons.json';
+const pokemonsURL = 'https://cors-anywhere-production-51be.up.railway.app/https://storage.googleapis.com/campus-cvs/00000000000-images-lectures/pokemons.json';
 
 class Pokemon {
     constructor(img, id, name, type, abilities, height, weight, weaknesses) {
@@ -17,7 +17,11 @@ class Pokemon {
 const cardsContainer = document.querySelector('.cards-container');
 const modalBackground = document.querySelector('.modal-background');
 const pokemonDetails = document.querySelector('.pokemon-details');
-
+const searchForm = document.querySelector('.search-form');
+const searchInput = document.getElementById('search-pokemon');
+const closeDetailsBtn = document.querySelector('.close-details');
+const suggestionToClick = document.querySelector('.suggestion-to-click');
+let pokemonInstancesArray = null;
 
 // Functions
 const fetchAllPokemonsData = async (url) => {
@@ -37,16 +41,18 @@ const fetchAllPokemonsData = async (url) => {
 const createPokemonInstances = (allData) => {
     const allInstances = [];
     allData.forEach(pokemon => {
-        const img = pokemon.ThumbnailImage;
-        const id = pokemon.id;
-        const name = pokemon.name;
-        const type = pokemon.type.join(', ');
-        const abilities = pokemon.abilities.join(', ');
-        const height = pokemon.height;
-        const weight = pokemon.weight;
-        const weakness = pokemon.weakness.join(', ');
-        const newPokemon = new Pokemon(img, id, name, type, abilities, height, weight, weakness);
-        allInstances.push(newPokemon);
+        if (!allInstances.some(pok => pok.name === pokemon.name)) {
+            const img = pokemon.ThumbnailImage;
+            const id = pokemon.id;
+            const name = pokemon.name;
+            const type = pokemon.type.join(', ');
+            const abilities = pokemon.abilities.join(', ');
+            const height = pokemon.height;
+            const weight = pokemon.weight;
+            const weakness = pokemon.weakness.join(', ');
+            const newPokemon = new Pokemon(img, id, name, type, abilities, height, weight, weakness);
+            allInstances.push(newPokemon);
+        }
     })
     return allInstances;
 }
@@ -54,14 +60,16 @@ const createPokemonInstances = (allData) => {
 const displayPokemons = (array) => {
     array.forEach(obj => {
         const newElement = document.createElement('div');
-        newElement.classList.add('col-3');
-        newElement.innerHTML = `<div class="card col-11 my-2" id=${obj.id}>
+        newElement.classList.add('poke-card-container');
+        newElement.innerHTML = `<div class="card my-3 my-lg-4">
         <img class="card-img-top"
             src=${obj.img}>
-        <div class="card-body d-flex flex-column align-items-center">
+        <div class="poke-body card-body d-flex flex-column align-items-center justify-content-between">
+            <div>
             <p class="card-title fw-medium text-center fs-4">${obj.name}</p>
             <p class="card-text fw-medium text-center fs-4">Type(s): <span>${obj.type}</span></p>
-            <button class="btn btn-primary">More details</button>
+            </div>
+            <button class="btn-details btn btn-primary" id=${obj.id}>More details</button>
         </div>
     </div>`
         cardsContainer.append(newElement);
@@ -69,11 +77,11 @@ const displayPokemons = (array) => {
 }
 
 const displayPokemonDetails = (array, id) => {
-    const pokeObj = array.find(obj => obj.id === id);
+    const pokeObj = array.find(obj => obj.id == id);    
     pokemonDetails.innerHTML = `<div class="my-4 d-flex flex-column align-items-center">
-    <img src=${pokeObj.img} style="width: 400px;">
+    <img class="details-img" src=${pokeObj.img}>
     <p class="fs-1 fw-bold">${pokeObj.name}</p>
-    <div class="row">
+    <div class="modal-data row px-lg-5">
         <div class="col fw-bold text-primary">
             <p>Type(s):</p>
             <p>Weight:</p>
@@ -96,25 +104,28 @@ const displayPokemonDetails = (array, id) => {
 const displaySearchedPokemon = (array, value) => {
     const valueLowerCase = value.toLowerCase();
     const pokName = valueLowerCase.charAt(0).toUpperCase() + valueLowerCase.slice(1);
-    const pokObj = array.find(obj = obj.name === pokName);
+    const pokObj = array.find(obj => obj.name === pokName);
     if (pokObj) {
-        cardsContainer.innerHTML = `<div class="card col-11 my-2" id=${pokObj.id}>
+        cardsContainer.innerHTML = `<div class="card my-3 my-lg-4">
         <img class="card-img-top"
             src=${pokObj.img}>
-        <div class="card-body d-flex flex-column align-items-center">
+            <div class="poke-body card-body d-flex flex-column align-items-center justify-content-between">
+            <div>
             <p class="card-title fw-medium text-center fs-4">${pokObj.name}</p>
             <p class="card-text fw-medium text-center fs-4">Type(s): <span>${pokObj.type}</span></p>
-            <button class="btn btn-primary">More details</button>
+            </div>
+            <button class="btn-details btn btn-primary" id=${pokObj.id}>More details</button>
         </div>
     </div>`
     }
+    suggestionToClick.classList.remove('d-none');
 }
 
 const fetchCreateAndDisplayPokemons = async () => {
     try {
         const fullData = await fetchAllPokemonsData(pokemonsURL);
-        const pokemonsArray = createPokemonInstances(fullData);
-        displayPokemons(pokemonsArray);
+        pokemonInstancesArray = createPokemonInstances(fullData);
+        displayPokemons(pokemonInstancesArray);
     } catch(error) {
         console.error(error);
     }
@@ -124,3 +135,18 @@ const fetchCreateAndDisplayPokemons = async () => {
 document.addEventListener('DOMContentLoaded', () => {
     fetchCreateAndDisplayPokemons();
 })
+
+searchForm.addEventListener('submit', e => {
+    e.preventDefault();
+    displaySearchedPokemon(pokemonInstancesArray, searchInput.value);
+});
+
+cardsContainer.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-details')) {
+        displayPokemonDetails(pokemonInstancesArray, e.target.id);
+    }
+});
+
+closeDetailsBtn.addEventListener('click', () => {
+    modalBackground.classList.add('d-none');
+});

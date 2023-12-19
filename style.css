@@ -1,0 +1,55 @@
+.tit {
+    font-family: 'Rubik Bubbles', sans-serif;
+    color: rgb(255, 162, 0);
+    border: 2px solid blue;
+}
+
+.modal-background {
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    background-color: rgba(0, 102, 255, 0.295);
+    backdrop-filter: blur(8px);
+}
+
+.cards-container::after {
+    content: "";
+    width: 47.7333333333%;
+}
+
+.poke-card-container {
+    width: 45%;
+}
+
+.poke-body {
+    height: 230px;
+}
+
+.details-img {
+    width: 300px;
+}
+
+@media screen and (min-width: 665px) {
+    .poke-card-container {
+        width: 30%;
+    }
+
+    .details-img {
+        width: 400px;
+    }
+}
+
+@media screen and (min-width: 953px) {
+    .poke-card-container {
+        width: 21.6%;
+    }
+
+    .modal-data {
+        font-size: 20px;
+    }
+
+    .cards-container::after {
+        content: "";
+        width: 47.7333333333%;
+    }
+}
